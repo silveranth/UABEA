@@ -3,6 +3,7 @@ using AssetsTools.NET.Cpp2IL;
 using AssetsTools.NET.Extra;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -258,8 +259,11 @@ namespace UABEAvalonia
                         bool isMonoBehaviour = cont.ClassId == (int)AssetClassID.MonoBehaviour || cont.ClassId < 0;
                         if (isMonoBehaviour && !setMonoTempGeneratorsYet && !fileInst.file.Metadata.TypeTreeEnabled)
                         {
+                            Debug.WriteLine("Setting Mono temp generators");
                             string dataDir = PathUtils.GetAssetsFileDirectory(fileInst);
+                            Debug.WriteLine($"dataDir: {dataDir}");
                             bool success = SetMonoTempGenerators(dataDir);
+                            Debug.WriteLine($"success: {success}");
                             if (!success)
                             {
                                 MonoTemplateLoadFailed?.Invoke(dataDir);
@@ -412,22 +416,27 @@ namespace UABEAvalonia
         {
             if (!setMonoTempGeneratorsYet)
             {
+                Debug.WriteLine("SetMonoTempGenerators");
+                Debug.WriteLine($"fileDir: {fileDir}");
                 setMonoTempGeneratorsYet = true;
-                FindCpp2IlFilesResult il2cppFiles = FindCpp2IlFiles.Find(fileDir);
-                if (il2cppFiles.success && ConfigurationManager.Settings.UseCpp2Il)
-                {
-                    am.MonoTempGenerator = new Cpp2IlTempGenerator(il2cppFiles.metaPath, il2cppFiles.asmPath);
-                    return true;
-                }
-                else
-                {
-                    string managedDir = Path.Combine(fileDir, "Managed");
-                    if (Directory.Exists(managedDir))
-                    {
-                        am.MonoTempGenerator = new MonoCecilTempGenerator(managedDir);
-                        return true;
-                    }
-                }
+                am.MonoTempGenerator = new MonoCecilTempGenerator(fileDir);
+                return true;
+                //FindCpp2IlFilesResult il2cppFiles = FindCpp2IlFiles.Find(fileDir);
+                //Debug.WriteLine($"il2cppFiles.success: {il2cppFiles.success}");
+                //if (il2cppFiles.success && ConfigurationManager.Settings.UseCpp2Il)
+                //{
+                //    am.MonoTempGenerator = new Cpp2IlTempGenerator(il2cppFiles.metaPath, il2cppFiles.asmPath);
+                //    return true;
+                //}
+                //else
+                //{
+                //    string managedDir = Path.Combine(fileDir, "Managed");
+                //    if (Directory.Exists(managedDir))
+                //    {
+                //        am.MonoTempGenerator = new MonoCecilTempGenerator(managedDir);
+                //        return true;
+                //    }
+                //}
             }
 
             return false;
